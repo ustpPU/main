@@ -1,7 +1,8 @@
 (function(root){'use strict';
 // PDF generated locally on explicit admin request. No participant data leaves the page.
 function reportData(d,generatedAt=new Date().toISOString()){
- const participants=d.participants.filter(r=>r.attendance).sort((a,b)=>a.school.localeCompare(b.school,'ms')||a.name.localeCompare(b.name,'ms'));
+ const cap=v=>String(v||'').normalize('NFKC').replace(/\s+/g,' ').trim().toLocaleUpperCase('ms-MY');
+ const participants=d.participants.filter(r=>r.attendance).map(r=>({...r,name:cap(r.name),school:cap(r.school)})).sort((a,b)=>a.school.localeCompare(b.school,'ms')||a.name.localeCompare(b.name,'ms'));
  const schools=d.schools.filter(s=>!s.attended).sort((a,b)=>a.name.localeCompare(b.name,'ms'));
  return {program:d.program,participants,schools,generatedAt,totalSchools:d.schools.length,attendedSchools:d.schools.filter(s=>s.attended>0).length};
 }
@@ -12,24 +13,25 @@ function pdfBytes(images,width=595.28,height=841.89){
  const xref=length;add('xref\n0 '+offsets.length+'\n0000000000 65535 f \n');for(let i=1;i<offsets.length;i++)add(String(offsets[i]).padStart(10,'0')+' 00000 n \n');add('trailer\n<< /Size '+offsets.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');const bytes=new Uint8Array(length);let at=0;for(const b of chunks){bytes.set(b,at);at+=b.length;}return bytes;
 }
 async function generate(d){
- if(document.fonts)await document.fonts.ready;const r=reportData(d),W=1240,H=1754,M=88,BOTTOM=H-120,pages=[];let canvas,ctx,y,pageNo=0;
+ if(document.fonts)await document.fonts.ready;const r=reportData(d),W=1240,H=1754,M=76,BOTTOM=H-124,pages=[];let canvas,ctx,y;
  const date=new Intl.DateTimeFormat('ms-MY',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kuala_Lumpur'}).format(new Date(r.program.date+'T00:00:00Z'));
  const stamp=new Date(r.generatedAt).toLocaleString('ms-MY',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kuala_Lumpur'});
- const font=(size=20,bold=false)=>{ctx.font=(bold?'700 ':'400 ')+size+'px Arial, sans-serif';};
+ const font=(size=21,bold=false)=>{ctx.font=(bold?'700 ':'400 ')+size+'px Arial, sans-serif';};
  function lines(value,max){const out=[];for(const para of String(value||'—').split(/\n/)){let line='';for(const word of para.split(/\s+/)){if(ctx.measureText(line+(line?' ':'')+word).width>max&&line){out.push(line);line='';}if(ctx.measureText(word).width>max){for(const char of word){if(ctx.measureText(line+char).width>max){out.push(line);line='';}line+=char;}}else line+=(line?' ':'')+word;}out.push(line);}return out;}
- function text(value,x,max,size=20,bold=false,color='#193b40'){font(size,bold);ctx.fillStyle=color;const a=lines(value,max);for(const line of a){ctx.fillText(line,x,y);y+=size*1.4;}return a.length;}
- function page(){canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,W,H);ctx.fillStyle='#113f46';ctx.fillRect(0,0,W,20);y=75;text('USTP PPD PETALING UTAMA',M,W-2*M,18,true,'#137c75');y+=15;text('LAPORAN KEHADIRAN',M,W-2*M,30,true);y+=10;text(r.program.title,M,W-2*M,25,true);text(date+'  |  '+r.program.start+' - '+r.program.end,M,W-2*M,19);text(r.program.venue,M,W-2*M,19);y+=10;text('Dijana: '+stamp+' (waktu Malaysia)',M,W-2*M,16,false,'#647878');ctx.strokeStyle='#c6d6d1';ctx.beginPath();ctx.moveTo(M,y+6);ctx.lineTo(W-M,y+6);ctx.stroke();y+=40;pageNo++;pages.push(canvas);}
- function ensure(height,heading,columns){if(y+height>BOTTOM){page();if(heading)section(heading);if(columns)header(columns);}}
- function section(title){font(23,true);const n=lines(title,W-2*M).length;ensure(n*34+35,'');text(title,M,W-2*M,23,true);y+=16;}
- function header(cols){ctx.fillStyle='#eaf2ee';ctx.fillRect(M,y-24,W-2*M,42);font(17,true);ctx.fillStyle='#193b40';cols.forEach(c=>ctx.fillText(c.title,M+c.x+10,y));y+=35;}
- function row(cells,cols,index,heading){font(18);const wrapped=cells.map((v,i)=>lines(v,cols[i].width-24)),height=Math.max(...wrapped.map(a=>a.length))*26+24;ensure(height,heading,cols);if(index%2===0){ctx.fillStyle='#f5f8f6';ctx.fillRect(M,y-19,W-2*M,height);}ctx.fillStyle='#213b3f';font(18);wrapped.forEach((a,i)=>a.forEach((line,j)=>ctx.fillText(line,M+cols[i].x+10,y+j*26)));y+=height;}
- page();text(r.participants.length+' peserta hadir  •  '+r.attendedSchools+'/'+r.totalSchools+' sekolah sasaran hadir  •  '+r.schools.length+' sekolah belum hadir',M,W-2*M,19,true);y+=20;
- const pc=[{title:'Bil.',x:0,width:60},{title:'Nama peserta',x:60,width:390},{title:'Sekolah / Organisasi',x:450,width:390},{title:'Penyertaan',x:840,width:W-2*M-840}];
- const ph='A. Peserta yang telah hadir';section(ph);header(pc);if(!r.participants.length)text('Belum ada peserta hadir.',M,W-2*M);r.participants.forEach((p,i)=>row([String(i+1),p.name,p.school,(p.participationType==='representative'?'Wakil':p.participationType==='participant'?'Peserta':'Belum dinyatakan')+(p.position?'\n'+p.position:'')],pc,i,ph+' (sambungan)'));
- y+=32;const sh='B. Sekolah yang belum mempunyai peserta hadir';ensure(160,'');section(sh);text('Sasaran: '+(r.program.targetAudience==='primary'?'SR sahaja':r.program.targetAudience==='secondary'?'SM sahaja':'SR & SM')+'. Sekolah dikira hadir apabila sekurang-kurangnya seorang peserta atau wakil hadir.',M,W-2*M,17);y+=15;
- const sc=[{title:'Bil.',x:0,width:60},{title:'Kod sekolah',x:60,width:180},{title:'Nama sekolah',x:240,width:W-2*M-240}];header(sc);if(!r.schools.length)text('Semua sekolah sasaran mempunyai peserta hadir.',M,W-2*M);r.schools.forEach((s,i)=>row([String(i+1),s.code,s.name],sc,i,sh+' (sambungan)'));
- pages.forEach((c,i)=>{const x=c.getContext('2d');x.strokeStyle='#c6d6d1';x.beginPath();x.moveTo(M,H-90);x.lineTo(W-M,H-90);x.stroke();x.font='16px Arial, sans-serif';x.fillStyle='#526e6b';x.fillText('USTP PPD Petaling Utama',M,H-57);x.textAlign='right';x.fillText('Halaman '+(i+1)+' / '+pages.length,W-M,H-57);});
- const images=pages.map(c=>({width:W,height:H,bytes:Uint8Array.from(atob(c.toDataURL('image/jpeg',.92).split(',')[1]),x=>x.charCodeAt(0))}));return {bytes:pdfBytes(images),fileName:r.program.id+'-laporan-kehadiran.pdf',pages:pages.length};
+ function text(value,x,max,size=21,bold=false,color='#163e43'){font(size,bold);ctx.fillStyle=color;for(const line of lines(value,max)){ctx.fillText(line,x,y);y+=size*1.4;}}
+ function page(){canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;ctx=canvas.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,W,H);ctx.fillStyle='#0e4548';ctx.fillRect(0,0,W,14);y=75;text('USTP PPD PETALING UTAMA',M,W-2*M,18,true,'#117e72');y+=18;text('LAPORAN PENDAFTARAN KEHADIRAN',M,W-2*M,pages.length?24:30,true);y+=14;text(r.program.title,M,W-2*M,pages.length?24:29,true);y+=9;text(date+'  |  '+r.program.start+' - '+r.program.end,M,W-2*M,20);text(r.program.venue,M,W-2*M,20,false,'#5f7476');y+=12;ctx.strokeStyle='#dae4df';ctx.beginPath();ctx.moveTo(M,y);ctx.lineTo(W-M,y);ctx.stroke();y+=34;pages.push(canvas);}
+ function section(title){text(title,M,W-2*M,25,true);y+=16;}
+ function ensure(height,heading,cols){if(y+height>BOTTOM){page();section(heading+' (sambungan)');header(cols);}}
+ function header(cols){ctx.fillStyle='#eaf3ed';ctx.fillRect(M,y-25,W-2*M,49);font(19,true);ctx.fillStyle='#275a51';cols.forEach(c=>ctx.fillText(c.title,M+c.x+12,y+3));y+=47;}
+ function row(cells,cols,index,heading){font(21);const wrapped=cells.map((v,i)=>lines(v,cols[i].width-28)),height=Math.max(...wrapped.map(a=>a.length))*29+23;ensure(height,heading,cols);if(index%2===0){ctx.fillStyle='#f5f8f5';ctx.fillRect(M,y-21,W-2*M,height);}ctx.fillStyle='#294247';font(21);wrapped.forEach((a,i)=>a.forEach((line,j)=>ctx.fillText(line,M+cols[i].x+12,y+j*29)));y+=height;}
+ page();const sy=y,cardWidth=(W-2*M-32)/3;
+ [[String(r.participants.length),'Peserta mendaftar\nkehadiran'],[r.attendedSchools+' / '+r.totalSchools,'Sekolah mempunyai\nrekod kehadiran'],[String(r.schools.length),'Sekolah tiada rekod\npendaftaran kehadiran']].forEach(([value,label],i)=>{const x=M+i*(cardWidth+16);ctx.fillStyle=i===2?'#f8f4e9':'#eef5f0';ctx.fillRect(x,sy-8,cardWidth,139);y=sy+43;text(value,x+19,cardWidth-38,40,true,i===2?'#95702f':'#136f61');y=sy+79;text(label,x+19,cardWidth-38,18,false,'#5f7470');});y=sy+170;
+ const ph='01  Senarai peserta mendaftar kehadiran',pc=[{title:'Bil.',x:0,width:65},{title:'Nama peserta',x:65,width:435},{title:'Sekolah / Organisasi',x:500,width:W-2*M-500}];
+ section(ph);header(pc);if(!r.participants.length)text('Tiada rekod pendaftaran kehadiran.',M,W-2*M,21);r.participants.forEach((p,i)=>row([String(i+1),p.name,p.school],pc,i,ph));
+ page();const sh='02  Sekolah tanpa rekod pendaftaran kehadiran';section(sh);text('Sasaran: '+(r.program.targetAudience==='primary'?'SR sahaja':r.program.targetAudience==='secondary'?'SM sahaja':'SR & SM')+' · Berdasarkan rekod pendaftaran kehadiran dalam sistem.',M,W-2*M,19,false,'#627777');y+=19;
+ const sc=[{title:'Bil.',x:0,width:65},{title:'Kod sekolah',x:65,width:175},{title:'Nama sekolah',x:240,width:W-2*M-240}];header(sc);if(!r.schools.length)text('Semua sekolah sasaran mempunyai rekod pendaftaran kehadiran.',M,W-2*M,21);r.schools.forEach((s,i)=>row([String(i+1),s.code,s.name],sc,i,sh));
+ pages.forEach((c,i)=>{const x=c.getContext('2d');x.strokeStyle='#d7e3dc';x.beginPath();x.moveTo(M,H-94);x.lineTo(W-M,H-94);x.stroke();x.font='18px Arial, sans-serif';x.fillStyle='#365e56';x.fillText('USTP PPD Petaling Utama',M,H-61);x.font='15px Arial, sans-serif';x.fillStyle='#70847e';x.fillText('Dijana '+stamp+' · Waktu Malaysia',M,H-34);x.textAlign='right';x.font='18px Arial, sans-serif';x.fillText('Halaman '+(i+1)+' / '+pages.length,W-M,H-61);});
+ const images=pages.map(c=>({width:W,height:H,bytes:Uint8Array.from(atob(c.toDataURL('image/jpeg',.9).split(',')[1]),x=>x.charCodeAt(0))}));return {bytes:pdfBytes(images),fileName:r.program.id+'-laporan-kehadiran.pdf',pages:pages.length};
 }
 const api={reportData,pdfBytes,generate};root.USTPAttendanceReport=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
