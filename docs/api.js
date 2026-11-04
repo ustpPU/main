@@ -9,7 +9,8 @@ const demoHash=s=>'preview:'+Array.from(String(s)).reduce((n,c)=>(Math.imul(n^c.
 const pending=new Map();
 function requestId(action,payload){const k=PKGDomain.stable({action,payload});if(!pending.has(k))pending.set(k,crypto.randomUUID());return {key:k,id:pending.get(k)};}
 async function call(action,payload={}){
- const req=requestId(action,payload);let result;
+ // Never retain a PIN in the retry map. Login is not a data mutation.
+ const req=action==='admin.login'?{key:null,id:crypto.randomUUID()}:requestId(action,payload);let result;
  if(gateway){if(action!=='public.catalog')throw Error('Buka ruang selamat untuk meneruskan.');result=await publicCatalog();}
  else if(embedded){result=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(Error(e.message||'Sambungan terputus. Cuba semula.'))).pmApi({action,payload,token,requestId:req.id}));}
  else{await new Promise(r=>setTimeout(r,120));try{if(action==='admin.login'){actor='Pentadbir demo';token='DEMO-ONLY';result={ok:true,data:{actor,token}};}else{const service=PKGDomain.createService({store:demoStore(),hash:demoHash,secret:()=>crypto.randomUUID()+crypto.randomUUID(),id:()=>crypto.randomUUID().replaceAll('-','').slice(0,14).toUpperCase(),now:()=>new Date().toISOString()});result={ok:true,data:service.call(action,payload,{role:token?'admin':'public',actor,requestId:req.id})};}}catch(e){result={ok:false,message:e.message,code:e.code};}}
