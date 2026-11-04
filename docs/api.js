@@ -14,7 +14,7 @@ async function call(action,payload={}){
  if(gateway){if(action!=='public.catalog')throw Error('Buka ruang selamat untuk meneruskan.');result=await publicCatalog();}
  else if(embedded){result=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(Error(e.message||'Sambungan terputus. Cuba semula.'))).pmApi({action,payload,token,requestId:req.id}));}
  else{await new Promise(r=>setTimeout(r,120));try{if(action==='admin.login'){actor='Pentadbir demo';token='DEMO-ONLY';result={ok:true,data:{actor,token}};}else{const service=PKGDomain.createService({store:demoStore(),hash:demoHash,secret:()=>crypto.randomUUID()+crypto.randomUUID(),id:()=>crypto.randomUUID().replaceAll('-','').slice(0,14).toUpperCase(),now:()=>new Date().toISOString()});result={ok:true,data:service.call(action,payload,{role:token?'admin':'public',actor,requestId:req.id})};}}catch(e){result={ok:false,message:e.message,code:e.code};}}
- if(!result||!result.ok){const error=Error(result?.message||'Respons server tidak lengkap. Cuba semula.');error.code=result?.code;throw error;}
+ if(!result||!result.ok){const error=Error(result?.message||'Respons server tidak lengkap. Cuba semula.');error.code=result?.code;if(action.startsWith('admin.')&&action!=='admin.login'&&(error.code==='AUTH_REQUIRED'||/^(Sesi tamat\.|Sesi bukan milik|Sila masuk semula menggunakan kaedah)/.test(error.message))){token='';actor='';pending.delete(req.key);error.requiresLogin=true;}throw error;}
  if(action==='admin.login'){token=result.data.token;actor=result.data.actor;}
  pending.delete(req.key);return result.data;
 }
