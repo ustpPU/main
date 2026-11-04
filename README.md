@@ -9,3 +9,5 @@ Admin boleh pilih daftar terus hadir atau pradaftar dengan QR kehadiran berasing
 `npm test` dan `npm run build`. Isi ID Sheet hanya dalam salinan deployment private; jangan commit nilai itu. `initializeUstpLive` menambah tab/acara yang belum ada sahaja, mengekalkan eventKey dan semua rekod sedia ada. `verifyUstpLive` semakan baca sahaja. Helpers staging ditolak pada live. Jangan padam Sheet atau jalankan reset semasa pembangunan.
 
 Acara pertama: Bengkel Transformasi Digital STEM: Pemerkasaan Literasi AI, 4 November 2026, 08:30–16:00, MAHSA Avenue International College. Sasaran Pengetua/Guru Besar semua SR dan SM.
+
+Borang peserta dan katalog public boleh dibuka tanpa login MOE. Laluan admin menggunakan deployment domain MOE berasingan. Kedua-duanya menggunakan database private kekal yang sama.
