@@ -1,1 +1,1 @@
-window.USTP_DEPLOYMENT={mode:"gateway",backendUrl:"CONFIGURE_LIVE_BACKEND_URL",publicUrl:"https://ustppu.github.io/main/"};
+window.USTP_DEPLOYMENT={"mode":"gateway","backendUrl":"https://script.google.com/a/macros/moe-dl.edu.my/s/AKfycbzT_4Jom_9Iiq6jdiHhbTzUBs15rMGXgRXG75nXlDPV7k3IufYqknXj8-cPBmLH3-StPw/exec","publicUrl":"https://ustppu.github.io/main/"};
