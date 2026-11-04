@@ -2,7 +2,7 @@ const PM_SHEET_ID='CONFIGURE_PRIVATE_LIVE_SHEET_ID';
 const PM_MODE='live';
 const PM_PUBLIC_URL='https://ustppu.github.io/main/';
 const PM_OWNER='ppd-b110-cm4@moe-dl.edu.my';
-const PM_ADMINS=[PM_OWNER,'g-49369646@moe-dl.edu.my'];
+const PM_ADMINS=[PM_OWNER,'g-49369646@moe-dl.edu.my','g-40519518@moe-dl.edu.my'];
 const PM_TABLES={programs:'PM_Programs',registrations:'PM_Registrations',attendance:'PM_Attendance',feedback:'PM_Feedback',certificates:'PM_Certificates',operations:'PM_Operations',audit:'PM_Audit'};
 function pmBook_(){const book=SpreadsheetApp.openById(PM_SHEET_ID);if(!book||book.getId()!==PM_SHEET_ID)throw Error('Projek belum dipadankan dengan Sheet Programme Manager staging.');return book;}
 function pmHash_(s){return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(s),Utilities.Charset.UTF_8).map(b=>('0'+((b+256)%256).toString(16)).slice(-2)).join('');}
@@ -35,8 +35,8 @@ function programmeStagingCheck(){
  const requestId='google-pm-check-register-20261104',registration=pmApi({action:'public.register',requestId,payload:{programId:'PG-STUDIO',name:'Peserta Ujian Google',email:'qa-google@example.invalid',school:'Sekolah Ujian',consent:true,eventKey:access.data.eventKey}});if(!registration.ok)throw Error(registration.message);
  const r=registration.data;
  const attend=pmApi({action:'admin.attend',token,requestId:'google-pm-check-attend-20261104',payload:{programId:'PG-STUDIO',registrationId:r.registrationId,accessKey:r.accessKey,method:'qr'}});if(!attend.ok)throw Error(attend.message);
- const feedback=pmApi({action:'public.feedback',requestId:'google-pm-check-feedback-20261104',payload:{registrationId:r.registrationId,accessKey:r.accessKey,rating:5,comment:'Maklum balas rekaan.',suggestion:''}});if(!feedback.ok)throw Error(feedback.message);
  const publish=pmApi({action:'admin.publishCertificates',token,requestId:'google-pm-check-publish-20261104',payload:{id:'PG-STUDIO'}});if(!publish.ok)throw Error(publish.message);
+ const feedback=pmApi({action:'public.feedback',requestId:'google-pm-check-feedback-20261104',payload:{registrationId:r.registrationId,accessKey:r.accessKey,rating:5,comment:'Maklum balas rekaan.',suggestion:''}});if(!feedback.ok)throw Error(feedback.message);
  const certificate=pmApi({action:'public.certificate',requestId:'google-pm-check-certificate-20261104',payload:{registrationId:r.registrationId,accessKey:r.accessKey}});if(!certificate.ok)throw Error(certificate.message);
  const verify=pmApi({action:'public.verify',payload:{id:certificate.data.certificate.id}});if(!verify.ok||verify.data.status!=='valid')throw Error('Verification failed');
  Logger.log(JSON.stringify({result:'PASS',registration:r.registrationId,attendance:true,feedback:true,certificate:certificate.data.certificate.id,verify:true,sourceModulesUnchanged:true,mailSent:false}));
