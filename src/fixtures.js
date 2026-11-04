@@ -1,0 +1,11 @@
+(function(root){
+function fixtures(){
+ const today=new Date(),d=offset=>{const a=new Date(today);a.setDate(a.getDate()+offset);return a.toLocaleDateString('en-CA',{timeZone:'Asia/Kuala_Lumpur'});};
+ return {programs:[
+ {id:'PG-STUDIO',title:'Studio Digital: Dari Idea ke Kandungan',category:'Bengkel',date:d(8),start:'08:30',end:'16:30',venue:'Studio Rakaman · PKG Petaling Utama',organizer:'PKG Petaling Utama',description:'Belajar merancang, merakam dan menghasilkan kandungan pembelajaran yang bermakna. Bengkel amali ini membawa anda daripada papan cerita pertama kepada video yang sedia dikongsi.\n\nBawa komputer riba dan idea pengajaran anda. Sesuai untuk guru semua bidang.',capacity:40,eventMode:'onsite',eventKey:'DEMO-EVENT-STUDIO-FICTIONAL-ONLY',checkInOpen:true,status:'published',registrationCloses:d(7),feedbackRequired:true,certificatesPublished:false,accent:'teal',createdAt:d(-3)+'T02:00:00Z'},
+ {id:'PG-AI',title:'AI dalam Bilik Darjah: Bermula dengan Bijak',category:'Latihan',date:d(14),start:'09:00',end:'13:00',venue:'Digital Maker Hub · PKG Petaling Utama',organizer:'USTP PPD Petaling Utama',description:'Terokai penggunaan AI untuk perancangan pengajaran, bahan pembelajaran dan pentaksiran. Cuba sendiri aliran kerja yang praktikal bersama rakan guru.\n\nKomputer riba dan akaun pembelajaran diperlukan.',capacity:30,eventMode:'preregister',eventKey:'DEMO-EVENT-AI-FICTIONAL-ONLY',checkInOpen:true,status:'published',registrationCloses:d(13),feedbackRequired:true,certificatesPublished:false,accent:'violet',createdAt:d(-2)+'T02:00:00Z'},
+ {id:'PG-JARINGAN',title:'Jalinan Digital: Sesi Perkongsian Guru',category:'Perkongsian',date:d(21),start:'14:00',end:'16:30',venue:'Alaf 21 · PKG Petaling Utama',organizer:'PKG Petaling Utama',description:'Ruang santai untuk bertukar pengalaman, berkongsi amalan baik dan membina kolaborasi baharu antara sekolah.',capacity:50,eventMode:'preregister',eventKey:'DEMO-EVENT-JARINGAN-FICTIONAL-ONLY',checkInOpen:false,status:'published',registrationCloses:d(20),feedbackRequired:false,certificatesPublished:false,accent:'amber',createdAt:d(-1)+'T02:00:00Z'}
+ ],registrations:[],attendance:[],feedback:[],certificates:[],operations:[],audit:[]};
+}
+root.PKGFixtures=fixtures;if(typeof module!=='undefined'&&module.exports)module.exports=fixtures;
+})(typeof globalThis!=='undefined'?globalThis:this);
