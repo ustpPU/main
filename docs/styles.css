@@ -16,3 +16,5 @@
 .lookup-result{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 0;border-bottom:1px solid var(--line,#e1e8e5)}.lookup-result h3{font-size:15px}.lookup-result .muted{font-size:12px;margin-top:6px}@media(max-width:640px){.lookup-result{align-items:stretch;flex-direction:column}.lookup-result .actions{flex-wrap:wrap}}
 
 .certificate-modern{border:3px solid #137c75;border-top:16px solid #137c75;background:linear-gradient(135deg,#f0f8f6 0%,#fff 35%)}.certificate-modern .cert-heading{color:#137c75}.cert-signer{margin-top:24px}#certificate-preview .certificate{max-width:100%;box-sizing:border-box}
+
+.template-editor{padding:18px;border:1px solid #d4e3df;border-radius:12px;background:#f6faf8}.template-editor input[type=file]{margin:12px 0;max-width:100%}#template-stage{touch-action:none;cursor:crosshair;border:1px solid #c6d5d0;background:white;min-height:80px}#template-stage svg text{cursor:move;user-select:none}.certificate.certificate-uploaded{padding:0;border:0;outline:0;min-height:0;background:white}.certificate-uploaded svg{max-width:100%}
